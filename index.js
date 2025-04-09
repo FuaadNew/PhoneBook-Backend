@@ -1,10 +1,12 @@
 
 const { json } = require('body-parser')
 const express = require('express')
-const { now } = require('mongoose')
 const app = express()
+const morgan = require('morgan')
 
-app.use(json)
+app.use(morgan('tiny'))
+
+app.use(json())
 
 let persons  = [
     { 
@@ -54,7 +56,14 @@ app.delete('/api/persons/:id',(request,response)=>{
     response.status(204).end()
  })
 
+
+
+ morgan.token('body', (req) => JSON.stringify(req.body))
+ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
+
+
  app.post('/api/persons/',(request,response)=>{
+   
     const {name, number} = request.body
     const randomId = Math.floor(Math.random() * 10000) + 1;
     const newPerson = {
