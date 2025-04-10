@@ -1,12 +1,26 @@
+const mongoose = require('mongoose')
+
+
+const Person = require('./models/person')
+const person = new Person({name:"Fuaad", phoneNumber: "6666666"})
+
+
+
+person.save().then(result => {
+  console.log("person saved")
+  
+})
 
 const { json } = require('body-parser')
 const express = require('express')
+const cors = require('cors')
 const app = express()
 const morgan = require('morgan')
 
 app.use(morgan('tiny'))
 
 app.use(json())
+app.use(cors())
 
 let persons  = [
     { 
@@ -47,7 +61,12 @@ app.get('/info',(request,response)=>{
  })
  
 app.get('/api/persons',(request,response)=>{
-    response.send(persons)
+    Person.find({}).then(persons =>{
+      response.send(persons)
+
+
+    })
+   
  })
 
 app.delete('/api/persons/:id',(request,response)=>{
@@ -56,6 +75,8 @@ app.delete('/api/persons/:id',(request,response)=>{
     response.status(204).end()
  })
 
+
+ 
 
 
  morgan.token('body', (req) => JSON.stringify(req.body))
