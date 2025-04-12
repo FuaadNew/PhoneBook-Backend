@@ -15,6 +15,8 @@ const errorHandler = (error,request,response,next)=>{
 
 
 
+
+
 const { json } = require('body-parser')
 const express = require('express')
 const cors = require('cors')
@@ -28,7 +30,6 @@ app.use(cors())
 
 
 
-const N = persons.length
 
 app.get('/',(request,response)=>{
    response.send('<h1>Hello World</h1>')
@@ -50,6 +51,27 @@ app.get('/api/persons',(request,response)=>{
 
     })
    
+ })
+ app.put('/api/persons/:id',(request,response,next)=>{
+  const {name,number} = request.body
+  const person = {
+    name:name,
+    number:number
+  }
+
+  Person.findByIdAndUpdate(request.params.id,person, {new: true}).then(updatedPersons=>{
+    if (updatedPersons){
+      response.json(updatedPersons)
+
+    }else{
+      response.status(404).json({error:'person not found'})
+    }
+    
+  }).catch((error)=>next(error))
+
+
+
+
  })
 
 app.delete('/api/persons/:id',(request,response)=>{
@@ -75,7 +97,8 @@ app.delete('/api/persons/:id',(request,response)=>{
  app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 
- app.post('/api/persons/',(request,response)=>{
+ app.post('/api/persons/', async (request,response)=>{
+  console.log('post request received')
    
     const {name, number} = request.body
     const newPerson = new Person({
@@ -84,12 +107,14 @@ app.delete('/api/persons/:id',(request,response)=>{
     })
    
     if (!name || !number) {
+      console.log('name or number is missing')
         return response.status(400).json({error: 'name or number is missing'})
     }
-
-    if (persons.some(person => person.name == name)){
-        return response.status(400).json({error: 'Names must be unique'})
+    const existingPerson = await Person.findOne({name: name})
+    if (existingPerson){
+      return response.status(400).json({error: 'Name must be unique'})
     }
+  
    
 
     newPerson.save().then(result=>{
@@ -113,7 +138,8 @@ app.delete('/api/persons/:id',(request,response)=>{
       }
     })
     .catch(error=>{
-        next(error)
+      next(error)
+      
     })
     
     
